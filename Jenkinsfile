@@ -33,7 +33,7 @@ pipeline {
             steps {
                 echo 'CD STEP 3/6: SCAN IMAGE'
                 sh '''
-                    docker scout quickview ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "Scout not available — skip"
+                    docker scout quickview ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "Scout not available - skip"
                 '''
             }
         }
@@ -72,9 +72,10 @@ pipeline {
                 echo 'CD STEP 6/6: VERIFY'
                 sh '''
                     sleep 3
-                    curl -f http://host.docker.internal:3002/health || exit 1
+                    APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_NAME})
+                    curl -f http://${APP_IP}:3000/health || exit 1
                     echo ""
-                    curl http://host.docker.internal:3002/
+                    curl http://${APP_IP}:3000/
                 '''
             }
         }
@@ -82,10 +83,10 @@ pipeline {
 
     post {
         success {
-            echo "CD PIPELINE SUCCESS — Deployed ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo "CD PIPELINE SUCCESS - Deployed ${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
         failure {
-            echo "CD PIPELINE FAILED — Check logs!"
+            echo "CD PIPELINE FAILED - Check logs!"
         }
         always {
             cleanWs()
